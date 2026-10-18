@@ -34,6 +34,20 @@ function caseView(current){
  root.append(make("h3",current.title),make("p",current.intro));
  if(current.continuity)root.append(make("p",current.continuity,"continuity"));
 }
+function priorNotebook(current){
+ const root=$("priorEvidence"),panel=$("priorNotebook");
+ root.replaceChildren();
+ if(recoveryBlocked||current.complete||!current.priorEvidence){panel.hidden=true;return;}
+ panel.hidden=false;
+ const previous=current.priorEvidence;
+ root.append(make("p",previous.caseNumber+"件目の判断："+previous.judgment,"muted"));
+ if(!previous.findings.length)root.append(make("p","前回は証拠を調べていませんでした。今回の調査を優先しましょう。","muted"));
+ for(const note of previous.findings){
+  const box=make("div",undefined,"finding");
+  box.append(make("strong",note.title),make("p",note.detail));root.append(box);
+ }
+ root.append(make("p","これは過去に確認した証拠です。今夜の案件に同じ真相が当てはまるとは限りません。","muted"));
+}
 function sources(current){
  const root=$("sources"),results=$("findings");root.replaceChildren();results.replaceChildren();
  if(recoveryBlocked||current.complete){
@@ -107,7 +121,7 @@ function historyView(){
  }
 }
 function render(){
- const current=G.current(state);stats(current);caseView(current);sources(current);decisions(current);resultView();historyView();
+ const current=G.current(state);stats(current);caseView(current);priorNotebook(current);sources(current);decisions(current);resultView();historyView();
  $("warning").textContent=notice;const next=$("nextCase");next.hidden=next.hidden||state.complete;
 }
 function download(name,raw){
