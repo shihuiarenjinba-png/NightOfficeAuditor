@@ -129,10 +129,19 @@ function clue(seed,index,id){
 }
 function current(raw){
  const s=validate(raw);
- if(s.complete)return {complete:true,processed:CASE_COUNT};
+ if(s.complete)return {complete:true,processed:CASE_COUNT,
+   rating:s.trust>=70&&s.score>=950?"信頼を得た監査官":s.trust>=40&&s.score>=500?"慎重な調査員":"判断を学ぶ新人監査官",
+   finalTrust:s.trust,finalScore:s.score};
  const c=spec(s.seed,s.index);
  return {complete:false,caseNumber:s.index+1,caseCount:CASE_COUNT,title:c.title,intro:c.intro,
   minutesLeft:s.active.minutesLeft,
+  continuity:s.index>=SCENARIOS.length
+    ? (()=>{
+       const previous=s.history[s.index-SCENARIOS.length];
+       const label=previous?CHOICES.find(x=>x.id===previous.choice).label:"記録なし";
+       return "前半の関連案件では「"+label+"」と報告されました。ただし今回は新しい証拠で判断してください。";
+      })()
+    : s.index>=3?"今夜も案件が続きます。先入観より証拠を優先しましょう。":null,
   sources:SOURCES.map(v=>({...v,checked:s.active.checked.includes(v.id),
    available:!s.active.checked.includes(v.id)&&s.active.minutesLeft>=v.cost})),
   findings:s.active.checked.map(id=>clue(s.seed,s.index,id)),
