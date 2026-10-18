@@ -69,6 +69,14 @@ function priorNotebook(current){
  }
  root.append(make("p","これは過去に確認した証拠です。今夜の案件に同じ真相が当てはまるとは限りません。","muted"));
 }
+function timeBudget(current){
+ const remain=recoveryBlocked||current.complete?0:current.minutesLeft;
+ $("caseTimerTitle").textContent=current.complete?"調査完了":"残り"+remain+"分";
+ $("caseTimeProgress").value=remain;
+ $("caseTimeHint").textContent=recoveryBlocked?"保存記録の確認が必要です。":
+ current.complete?"全12件の報告を終えました。":
+ "証拠は最大2種類まで。残り時間の使い方を考えて報告してください。";
+}
 function sources(current){
  const root=$("sources"),results=$("findings");root.replaceChildren();results.replaceChildren();
  if(recoveryBlocked||current.complete){
@@ -142,7 +150,7 @@ function historyView(){
  }
 }
 function render(){
- const current=G.current(state);stats(current);caseView(current);priorNotebook(current);evidenceDesk(current);sources(current);decisions(current);resultView();historyView();
+ const current=G.current(state);stats(current);caseView(current);priorNotebook(current);evidenceDesk(current);timeBudget(current);sources(current);decisions(current);resultView();historyView();
  $("warning").textContent=notice;const next=$("nextCase");next.hidden=next.hidden||state.complete;
 }
 function download(name,raw){
