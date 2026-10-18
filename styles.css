@@ -3,3 +3,23 @@
 .case-notebook{margin-top:13px;padding:8px 14px;border:1px solid #6c8290;border-radius:10px;background:#253844}
 .case-notebook>summary{color:#efc887;cursor:pointer;font-weight:750;padding:8px 0}
 .case-notebook .finding{margin:8px 0}
+
+
+/* Paper-file visualization of actual evidence slots; does not reveal the hidden case truth. */
+.evidence-board{border:1px solid #997d58;border-radius:12px;padding:15px;
+ background:linear-gradient(150deg,#514b3e,#313e3d);margin:16px 0}
+.evidence-board-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+ border-bottom:1px dashed #bca77f;padding-bottom:10px;margin-bottom:13px}
+.evidence-board-head strong{font-size:16px;color:#f2dbb3}
+.evidence-board-head small{font-size:12px;color:#e4d8c2}
+.evidence-paper-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.evidence-paper{border:1px solid #d1c3a1;border-radius:5px;background:#e5dbc2;color:#2b332f;
+ min-height:110px;padding:12px 14px;box-shadow:3px 5px 0 #162a2840;transform:rotate(-.5deg)}
+.evidence-paper:nth-child(2){transform:rotate(.65deg)}
+.evidence-paper.empty{border-style:dashed;background:#a5aca4;color:#25383b}
+.evidence-paper small{display:block;font-size:11px;letter-spacing:.1em}
+.evidence-paper strong{display:block;margin-top:10px;font-size:15px;line-height:1.45}
+.evidence-paper p{font-size:12px;line-height:1.5;margin:7px 0 0}
+.evidence-board-note{margin:12px 0 0;font-size:12px;color:#eadbc2;line-height:1.5}
+@media(max-width:560px){.evidence-paper-grid{grid-template-columns:1fr}.evidence-paper,.evidence-paper:nth-child(2){transform:none}}
+@media(prefers-reduced-motion:reduce){.evidence-paper{transition:none}}
