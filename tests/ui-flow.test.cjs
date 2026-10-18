@@ -18,7 +18,7 @@ class Node {
 }
 function boot(raw,confirmValue=true){
  const ids=["count","score","trust","time","case","sources","findings","choices",
-  "warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
+  "evidenceBoard","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
  nodes.nextCase.hidden=true;
  const saved=new Map();
