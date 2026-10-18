@@ -39,8 +39,15 @@ function random(seed,index,salt){
 const clone=x=>JSON.parse(JSON.stringify(x));
 function spec(seed,index){
  integer(seed,"seed",1,2147483647);integer(index,"index",0,CASE_COUNT-1);
- const scenario=SCENARIOS[(index+Math.floor(random(seed,index,7)*SCENARIOS.length))%SCENARIOS.length];
- const truth=(index+seed%3)%3;
+ // Each 12-case campaign contains four of each resolution; the ordering is
+ // seeded and shuffled so the next answer cannot be inferred from the day number.
+ const scenario=SCENARIOS[(index+seed%SCENARIOS.length)%SCENARIOS.length];
+ const answers=Array.from({length:CASE_COUNT},(_,i)=>i%3);
+ for(let i=answers.length-1;i>0;i--){
+  const j=Math.floor(random(seed,i,800+i)* (i+1));
+  [answers[i],answers[j]]=[answers[j],answers[i]];
+ }
+ const truth=answers[index];
  const key=Math.floor(random(seed,index,26)*SOURCES.length);
  return {index,title:scenario.title,intro:scenario.intro,subject:scenario.subject,truth,key};
 }
