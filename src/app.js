@@ -34,7 +34,7 @@ function caseView(current){
  root.append(make("h3",current.title),make("p",current.intro));
 }
 function sources(current){
- const root=$("sources");root.replaceChildren(),results=$("findings");results.replaceChildren();
+ const root=$("sources"),results=$("findings");root.replaceChildren();results.replaceChildren();
  if(recoveryBlocked||current.complete){
   root.append(make("p",recoveryBlocked?"保存データの復旧が必要です。":"すべての証拠調査を終了しました。","muted"));
   return;
