@@ -119,3 +119,19 @@ test("following strong evidence beats submitting blind 'needs review' for most c
  assert.ok(investigatedTotal>blindTotal,
   "investigation should offer enough value to justify spending scarce time on clues");
 });
+
+test("repeated cases expose only old inspected clues, not the new unseen truth",()=>{
+ let state=G.initial(47);
+ for(let i=0;i<6;i++){
+  state=G.inspect(state,"ledger").state;
+  state=G.decide(state,"review").state;
+ }
+ const cur=G.current(state),old=state.history[0];
+ assert.equal(cur.caseNumber,7);
+ assert.equal(cur.priorEvidence.caseNumber,1);
+ assert.equal(cur.priorEvidence.findings.length,old.checked.length);
+ assert.equal(cur.priorEvidence.judgment,G.CHOICES.find(x=>x.id===old.choice).label);
+ assert.equal(Object.hasOwn(cur,"truth"),false);
+ assert.equal(Object.hasOwn(cur.priorEvidence,"truth"),false);
+ assert.deepEqual(G.validate(JSON.parse(JSON.stringify(state))),state);
+});
