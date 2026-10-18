@@ -116,7 +116,7 @@ function decisions(current){
    try{
     const result=G.decide(state,choice.id);state=result.state;lastReport=result.report;
     notice=result.report.correct?"判断を記録しました。":"判断を記録しました。次の案件に学びを活かしましょう。";
-    persist();render();$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
+    persist();render();window.OperationTabs?.open("report");$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
    }catch(e){notice=e.message;render();}
   });root.append(b);
  }
@@ -184,7 +184,7 @@ function init(){
    "読み取れない元のセーブを上書きします。先にファイルに退避しましたか？":
    "今の12案件の進行を消して最初から始めます。セーブを書き出しましたか？";
   if(!confirm(msg))return;
-  state=G.initial();lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="新しい夜の監査を始めました。";persist();render();
+  state=G.initial();lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="新しい夜の監査を始めました。";persist();render();window.OperationTabs?.open("case");
  });
  $("nextCase").addEventListener("click",()=>$("casePanel").scrollIntoView({block:"start",behavior:"smooth"}));
 }
