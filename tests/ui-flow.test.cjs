@@ -18,7 +18,7 @@ class Node {
 }
 function boot(raw,confirmValue=true){
  const ids=["count","score","trust","time","case","sources","findings","choices",
-  "evidenceBoard","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
+  "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
  nodes.nextCase.hidden=true;
  const saved=new Map();
@@ -129,4 +129,18 @@ test("related-case evidence notebook appears only in the second half and never m
  const before=JSON.stringify(ui.getState());
  // Notebook is read-only; viewing it does not spend time, score, or save money.
  assert.equal(JSON.stringify(ui.getState()),before);
+});
+
+test("investigation clock changes only when evidence is gathered",()=>{
+ const ui=boot(),before=ui.getState();assert.equal(ui.nodes.caseTimerTitle.textContent,"残り10分");
+ assert.equal(ui.nodes.caseTimeProgress.value,10);ui.inspect(0);
+ assert.equal(ui.nodes.caseTimerTitle.textContent,"残り7分");assert.equal(ui.nodes.caseTimeProgress.value,7);
+ assert.equal(ui.getState().score,before.score);
+});
+test("second-half cases have individual context but earlier resolution never fixes later truth",()=>{
+ const s=G.initial(77),first=G.current(s).title;
+ let c=s;for(let i=0;i<6;i++)c=G.decide(c,"review").state;
+ const later=G.current(c);
+ assert.equal(later.title,first);assert.match(later.intro,/前半|引き継|交代|前回|新しい|変更|窓口|別の日/);
+ assert.ok(later.priorEvidence);
 });
