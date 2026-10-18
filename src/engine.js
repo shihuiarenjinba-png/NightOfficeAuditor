@@ -24,6 +24,15 @@ const SCENARIOS=Object.freeze([
  {title:"変わった振込先",intro:"支払先情報が月末に更新されています。正規の依頼か確かめましょう。",subject:"支払"},
  {title:"出張の精算",intro:"経費申請の交通費が通常より高めです。説明がつくのでしょうか。",subject:"精算"}
 ]);
+// The returning six cases have distinct human context but no leaked verdicts.
+const RETURN_CONTEXT=Object.freeze([
+ "前半の伝票処理を知る新人担当者が、別の日の伝票欠番を見つけました。過去の結論を写すだけでは足りません。",
+ "夜間の配送会社が交代しました。前回と同じ時刻のずれでも、今回の説明資料は別物です。",
+ "在庫管理を引き継いだ担当者から新たな差額報告が届きました。前半と同じ原因だとは限りません。",
+ "承認者の代理を担う新しい部署が登場します。署名の空欄だけで重大な不一致と決めてよいでしょうか。",
+ "取引先の窓口が変更され、支払情報の変更依頼が再び届きました。誰が承認したかを確かめる必要があります。",
+ "出張精算ルールが見直されました。同じ金額の違和感でも、旧ルールと新ルールの差を考えてください。"
+]);
 const RATING=Object.freeze([
  [115,28,-110],[-35,95,-55],[-155,24,150]
 ]); // rows: verified case state (clear/review/escalate), cols: player judgment
@@ -49,7 +58,7 @@ function spec(seed,index){
  }
  const truth=answers[index];
  const key=Math.floor(random(seed,index,26)*SOURCES.length);
- const followUp=index>=SCENARIOS.length?" 今度は別の担当者による似た案件です。前回の判断をそのまま当てはめず、記録を確かめてください。":" 依頼人は明朝までの報告を待っています。";
+ const followUp=index>=SCENARIOS.length?" "+RETURN_CONTEXT[(index+seed%SCENARIOS.length)%SCENARIOS.length]:" 依頼人は明朝までの報告を待っています。";
  return {index,title:scenario.title,intro:scenario.intro+followUp,subject:scenario.subject,truth,key};
 }
 function initial(seed=20261018){
