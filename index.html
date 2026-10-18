@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';script-src 'self';style-src 'self';connect-src 'none';img-src 'self' data:;object-src 'none';frame-src 'none';base-uri 'none'">
+<title>深夜監査室 — Night Office Auditor</title>
+<link rel="stylesheet" href="./styles.css">
+<script defer src="./src/engine.js"></script>
+<script defer src="./src/app.js"></script>
+</head>
+<body><main class="shell">
+<header class="hero">
+<div><p class="eyebrow">NIGHT OFFICE AUDITOR / OFFLINE STORY PUZZLE</p>
+<h1>この書類は、<br><span>本当に間違っているのか。</span></h1>
+<p class="lead">深夜の監査室に届く12件の違和感。すべてを調べる時間はない。
+疑いすぎても、見逃しても信用を失う。何を調べ、どう報告するかを選ぶ推理ゲーム。</p></div>
+<div class="version">開発版 / 販売HOLD</div></header>
+<section class="stats" aria-label="監査室の成績">
+<div><small>夜の案件</small><strong id="count">1 / 12</strong></div>
+<div><small>評価点</small><strong id="score">0</strong></div>
+<div><small>依頼主からの信用</small><strong id="trust">60 / 100</strong></div>
+<div><small>残り調査時間</small><strong id="time">10分</strong></div></section>
+<section class="panel" id="casePanel">
+<div class="step"><span>1</span><div><h2>今夜の案件を読む</h2><p>初めて見た違和感が、そのまま真相とは限りません。</p></div></div>
+<div id="case" class="case"></div></section>
+<section class="panel">
+<div class="step"><span>2</span><div><h2>調べる証拠を選ぶ</h2><p>調査には時間がかかります。確認できるのは最大2種類です。</p></div></div>
+<div id="sources" class="sources"></div>
+<div id="findings" class="findings" aria-live="polite"></div></section>
+<section class="panel decision">
+<div class="step"><span>3</span><div><h2>あなたの判断を報告する</h2><p>確かな証拠がなければ「追加確認」も選べます。誤報告には代償があります。</p></div></div>
+<div id="choices" class="choices"></div>
+<p id="warning" class="warning" role="status"></p></section>
+<section class="panel report"><h2>判断の結果</h2>
+<div id="result" aria-live="polite"><p class="muted">最初の判断を報告すると、信用や評価点の変化と案件の解説が表示されます。</p></div>
+<button id="nextCase" class="secondary" type="button" hidden>次の案件の証拠を見る ↑</button></section>
+<details class="extra"><summary>監査記録とセーブの管理（詳細）</summary><div class="extra-body">
+<h2>最近の判断</h2><div id="history"></div>
+<div class="actions"><button id="export" type="button">セーブを書き出す</button>
+<button id="import" type="button">セーブを読み込む</button>
+<button id="reset" class="danger" type="button">はじめからやり直す</button>
+<input id="savefile" type="file" accept=".json,application/json" hidden></div>
+<p class="muted">判断は端末内で自動保存します。元のセーブを読み込めない場合、確認せずに上書きしません。</p>
+</div></details>
+<footer>架空の証拠・架空の案件を用いた娯楽用ゲームです。実際の監査・法務・会計判断には利用できません。</footer>
+</main></body></html>
