@@ -51,9 +51,8 @@
   
   // Current case is automatically revealed after the player presses Next Case.
   document.getElementById("nextCase").addEventListener("click",()=>open("case"));
-  document.getElementById("choices").addEventListener("click",event=>{
-   if(event.target.closest("button"))queueMicrotask(()=>open("report"));
-  });
+  // Report navigation occurs only inside the game's successful decision handler.
+  // Declined confirmations and invalid choices must keep the decision screen visible.
   window.OperationTabs=Object.freeze({open,current:()=>selected});
   open(selected);
  }
