@@ -18,7 +18,7 @@ class Node {
 }
 function boot(raw,confirmValue=true){
  const ids=["count","score","trust","time","case","sources","findings","choices",
-  "warning","result","nextCase","history","export","import","reset","savefile","casePanel"];
+  "warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
  nodes.nextCase.hidden=true;
  const saved=new Map();
@@ -115,4 +115,18 @@ test("all 12 cases can be completed from the same three-step UI",()=>{
  assert.match(ui.nodes.case.textContent,/12件の監査が終わりました/);
  assert.equal(ui.nodes.choices.children.length,1);
  assert.equal(ui.nodes.nextCase.hidden,true);
+});
+
+test("related-case evidence notebook appears only in the second half and never mutates saves",()=>{
+ const ui=boot();
+ assert.equal(ui.nodes.priorNotebook.hidden,true);
+ for(let i=0;i<6;i++){ui.inspect(0);ui.choose(1);}
+ assert.equal(ui.getState().index,6);
+ assert.equal(ui.nodes.priorNotebook.hidden,false);
+ assert.match(ui.nodes.priorEvidence.textContent,/1件目の判断/);
+ assert.match(ui.nodes.priorEvidence.textContent,/台帳・金額を照合/);
+ assert.match(ui.nodes.priorEvidence.textContent,/今夜の案件に同じ真相/);
+ const before=JSON.stringify(ui.getState());
+ // Notebook is read-only; viewing it does not spend time, score, or save money.
+ assert.equal(JSON.stringify(ui.getState()),before);
 });
