@@ -142,6 +142,12 @@ function current(raw){
        return "前半の関連案件では「"+label+"」と報告されました。ただし今回は新しい証拠で判断してください。";
       })()
     : s.index>=3?"今夜も案件が続きます。先入観より証拠を優先しましょう。":null,
+  priorEvidence:s.index>=SCENARIOS.length
+    ? (()=>{const oldIndex=s.index-SCENARIOS.length,previous=s.history[oldIndex];
+       return {caseNumber:oldIndex+1,judgment:CHOICES.find(x=>x.id===previous.choice).label,
+        findings:previous.checked.map(id=>clue(s.seed,oldIndex,id))};
+      })()
+    : null,
   sources:SOURCES.map(v=>({...v,checked:s.active.checked.includes(v.id),
    available:!s.active.checked.includes(v.id)&&s.active.minutesLeft>=v.cost})),
   findings:s.active.checked.map(id=>clue(s.seed,s.index,id)),
