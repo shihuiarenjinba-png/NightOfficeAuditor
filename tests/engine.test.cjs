@@ -95,3 +95,27 @@ test("different seeds alter at least some findings and hidden outcomes",()=>{
  const out=starts.map(s=>G.inspect(s,"ledger").finding.detail);
  assert.ok(new Set(out).size>1);
 });
+
+test("following strong evidence beats submitting blind 'needs review' for most campaigns",()=>{
+ let blindTotal=0,investigatedTotal=0;
+ function chooseByEvidence(details){
+  const decisive=details.find(x=>x.reliability==="主要な証拠");
+  if(!decisive)return "review";
+  const clue=decisive.detail;
+  if(/一致|正当な説明|事前に記録/.test(clue)&&!/一致していない|食い違う/.test(clue))return "clear";
+  if(/複数の独立記録で不一致|同一の変更を説明できない|本人が依頼を否定/.test(clue))return "escalate";
+  return "review";
+ }
+ for(let seed=1;seed<=60;seed++){
+  let blind=G.initial(seed),checked=G.initial(seed);
+  while(!blind.complete){
+   blind=G.decide(blind,"review").state;
+   checked=G.inspect(checked,"ledger").state;
+   checked=G.inspect(checked,"approval").state;
+   checked=G.decide(checked,chooseByEvidence(G.current(checked).findings)).state;
+  }
+  blindTotal+=blind.score;investigatedTotal+=checked.score;
+ }
+ assert.ok(investigatedTotal>blindTotal,
+  "investigation should offer enough value to justify spending scarce time on clues");
+});
