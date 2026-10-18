@@ -28,10 +28,11 @@ function caseView(current){
   return;
  }
  if(current.complete){
-  root.append(make("h3","今夜の12件の監査が終わりました"),
+  root.append(make("h3",current.rating+" — 今夜の12件の監査が終わりました"),
    make("p","すべての案件を確認しました。高い評価点と依頼主の信用を両立できたでしょうか。記録を書き出すか、新しい夜を始めてください。"));return;
  }
  root.append(make("h3",current.title),make("p",current.intro));
+ if(current.continuity)root.append(make("p",current.continuity,"continuity"));
 }
 function sources(current){
  const root=$("sources"),results=$("findings");root.replaceChildren();results.replaceChildren();
