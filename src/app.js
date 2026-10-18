@@ -34,6 +34,27 @@ function caseView(current){
  root.append(make("h3",current.title),make("p",current.intro));
  if(current.continuity)root.append(make("p",current.continuity,"continuity"));
 }
+
+function evidenceDesk(current){
+ const root=$("evidenceBoard");root.replaceChildren();
+ const header=make("div",undefined,"evidence-board-head");
+ header.append(make("strong","今夜の証拠ファイル"),make("small",recoveryBlocked?"セーブ復元待ち":
+    current.complete?"調査完了":"残り "+current.minutesLeft+"分"));
+ root.append(header);
+ const papers=make("div",undefined,"evidence-paper-grid");
+ const findings=recoveryBlocked||current.complete?[]:current.findings;
+ for(let i=0;i<2;i++){
+  const record=findings[i],paper=make("div",undefined,"evidence-paper"+(record?"":" empty"));
+  paper.append(make("small","証拠 "+(i+1)+" / 2"));
+  paper.append(make("strong",record?record.title:"未調査"));
+  paper.append(make("p",record?"確認済み："+record.reliability:"調査項目を選ぶと、ここに資料が入ります。"));
+  papers.append(paper);
+ }
+ root.append(papers,make("p",recoveryBlocked?"セーブの確認が完了するまで調査は進みません。":
+  current.complete?"12件の調査を終えました。":"確認済み "+findings.length+
+  "件。判断は自動では決まりません。内容と食い違いを読み、自分で報告してください。","evidence-board-note"));
+}
+
 function priorNotebook(current){
  const root=$("priorEvidence"),panel=$("priorNotebook");
  root.replaceChildren();
@@ -121,7 +142,7 @@ function historyView(){
  }
 }
 function render(){
- const current=G.current(state);stats(current);caseView(current);priorNotebook(current);sources(current);decisions(current);resultView();historyView();
+ const current=G.current(state);stats(current);caseView(current);priorNotebook(current);evidenceDesk(current);sources(current);decisions(current);resultView();historyView();
  $("warning").textContent=notice;const next=$("nextCase");next.hidden=next.hidden||state.complete;
 }
 function download(name,raw){
