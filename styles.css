@@ -23,3 +23,8 @@
 .evidence-board-note{margin:12px 0 0;font-size:12px;color:#eadbc2;line-height:1.5}
 @media(max-width:560px){.evidence-paper-grid{grid-template-columns:1fr}.evidence-paper,.evidence-paper:nth-child(2){transform:none}}
 @media(prefers-reduced-motion:reduce){.evidence-paper{transition:none}}
+
+.case-timer{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin:14px 0 18px;padding:12px;background:#233c43;border:1px solid #778b84;border-radius:10px}
+.case-timer strong{min-width:80px;color:#f3d9a7}
+.case-timer progress{flex:1 1 155px;max-width:330px;height:15px;accent-color:#91bd9c}
+.case-timer span{color:#d4e3dc;font-size:12px}
