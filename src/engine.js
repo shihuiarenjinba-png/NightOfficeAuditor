@@ -49,7 +49,8 @@ function spec(seed,index){
  }
  const truth=answers[index];
  const key=Math.floor(random(seed,index,26)*SOURCES.length);
- return {index,title:scenario.title,intro:scenario.intro,subject:scenario.subject,truth,key};
+ const followUp=index>=SCENARIOS.length?" 今度は別の担当者による似た案件です。前回の判断をそのまま当てはめず、記録を確かめてください。":" 依頼人は明朝までの報告を待っています。";
+ return {index,title:scenario.title,intro:scenario.intro+followUp,subject:scenario.subject,truth,key};
 }
 function initial(seed=20261018){
  integer(seed,"seed",1,2147483647);
