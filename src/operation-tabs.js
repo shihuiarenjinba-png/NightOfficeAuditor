@@ -23,6 +23,15 @@
    for(const element of screenByName[page.id])element.dataset.operationScreen=page.id;
   }
   panels[0].parentNode.insertBefore(nav,panels[0]);
+  const nextActions={"case":["evidence","証拠を調べる →"],"evidence":["decision","集めた証拠で報告する →"]};
+  for(const [from,[to,label]] of Object.entries(nextActions)){
+   const area=screenByName[from].at(-1);
+   const foot=document.createElement("div");foot.className="operation-next";
+   const button=document.createElement("button");button.type="button";button.className="operation-next-button";
+   button.textContent=label;button.addEventListener("click",()=>open(to));
+   foot.append(button);area.append(foot);
+  }
+
   function open(id,{focus=false}={}){
    if(!screenByName[id])return false;
    selected=id;
