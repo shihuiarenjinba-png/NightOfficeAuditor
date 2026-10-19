@@ -124,7 +124,9 @@ function decisions(current){
 function resultView(){
  const root=$("result");root.replaceChildren();
  if(!lastReport){
-  root.append(make("p","証拠を調べて報告すると、判断の結果と見落とした根拠をここで確認できます。","muted"));
+  root.append(make("p",state.history.length?
+   "直近の判定は保存されています。前回の調査内容は「記録・セーブ」タブから確認してください。":
+   "証拠を調べて報告すると、判断の結果をここで確認できます。","muted"));
   $("nextCase").hidden=true;return;
  }
  const r=lastReport,box=make("div",undefined,"outcome");
@@ -186,7 +188,10 @@ function init(){
   if(!confirm(msg))return;
   state=G.initial();lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="新しい夜の監査を始めました。";persist();render();globalThis.OperationTabs?.open("case");
  });
- $("nextCase").addEventListener("click",()=>$("casePanel").scrollIntoView({block:"start",behavior:"smooth"}));
+ $("nextCase").addEventListener("click",()=>{
+  globalThis.OperationTabs?.open("case");
+  $("casePanel").scrollIntoView({block:"start",behavior:"smooth"});
+ });
 }
 document.addEventListener("DOMContentLoaded",init);
 })();
