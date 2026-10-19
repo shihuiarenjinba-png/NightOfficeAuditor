@@ -18,7 +18,7 @@ class Node {
 }
 function boot(raw,confirmValue=true){
  const ids=["count","score","trust","time","case","sources","findings","choices",
-  "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
+  "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence","backupSlot","exportBackup"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
  nodes.nextCase.hidden=true;
  const saved=new Map();
@@ -173,4 +173,18 @@ test("starting a new night archives the previous investigation without overwriti
  ui.reset();
  assert.equal(ui.saved.get(key+":backup"),first);
  assert.equal(ui.saved.get(key+":backup:2"),second);
+});
+
+test("archived investigations are selectable and export a valid restorable save",()=>{
+ const ui=boot();
+ ui.inspect(0);
+ const saved=ui.saved.get("night-office-auditor:save:v1");
+ ui.reset();
+ assert.equal(ui.nodes.backupSlot.children.length,1);
+ assert.equal(ui.nodes.exportBackup.disabled,false);
+ ui.nodes.backupSlot.value="night-office-auditor:save:v1:backup";
+ ui.nodes.exportBackup.click();
+ const exported=JSON.parse(ui.download());
+ assert.equal(exported.schema,G.VERSION);
+ assert.deepEqual(exported.state,JSON.parse(saved));
 });
