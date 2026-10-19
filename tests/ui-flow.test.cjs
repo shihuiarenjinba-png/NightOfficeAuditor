@@ -36,9 +36,10 @@ function boot(raw,confirmValue=true){
   createObjectURL(blob){downloadValue=blob.parts.join("");return "blob:save"},
   revokeObjectURL(){}
  };
+ let denySaving=false;
  const storage={
   getItem:k=>saved.get(k)??null,
-  setItem:(k,v)=>saved.set(k,v)
+  setItem:(k,v)=>{if(denySaving)throw Error("storage full");saved.set(k,v);}
  };
  const context={NightOfficeGame:G,document:doc,localStorage:storage,URL,Blob,
   alert:msg=>{throw Error("Unexpected alert: "+msg);},
@@ -48,6 +49,7 @@ function boot(raw,confirmValue=true){
  return {
   nodes,saved,download:()=>downloadValue,
   getState:()=>JSON.parse(saved.get("night-office-auditor:save:v1")),
+  blockSaving:value=>{denySaving=value;},
   inspect(i){nodes.sources.children[i].click();},
   choose(i){nodes.choices.children[i].click();},
   reset(){nodes.reset.click();},
@@ -143,4 +145,32 @@ test("second-half cases have individual context but earlier resolution never fix
  const later=G.current(c);
  assert.equal(later.title,first);assert.match(later.intro,/前半|引き継|交代|前回|新しい|変更|窓口|別の日/);
  assert.ok(later.priorEvidence);
+});
+
+test("a full storage device cannot consume a clue or show a completed decision",()=>{
+ const ui=boot(),before=JSON.stringify(ui.getState());
+ ui.blockSaving(true);
+ ui.inspect(0);
+ assert.equal(JSON.stringify(ui.getState()),before);
+ assert.match(ui.nodes.warning.textContent,/確定しませんでした/);
+ ui.choose(1);
+ assert.equal(JSON.stringify(ui.getState()),before);
+ assert.equal(ui.nodes.nextCase.hidden,true);
+ assert.doesNotMatch(ui.nodes.result.textContent,/今回の評価点/);
+ ui.blockSaving(false);
+ ui.inspect(0);
+ assert.equal(ui.getState().active.minutesLeft,7);
+ ui.choose(1);
+ assert.equal(ui.getState().history.length,1);
+});
+test("starting a new night archives the previous investigation without overwriting it",()=>{
+ const ui=boot(),key="night-office-auditor:save:v1";
+ ui.inspect(0);const first=ui.saved.get(key);
+ ui.reset();
+ assert.equal(ui.saved.get(key+":backup"),first);
+ assert.equal(ui.getState().index,0);
+ ui.inspect(1);const second=ui.saved.get(key);
+ ui.reset();
+ assert.equal(ui.saved.get(key+":backup"),first);
+ assert.equal(ui.saved.get(key+":backup:2"),second);
 });
