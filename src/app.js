@@ -26,6 +26,31 @@ function preserveBackup(raw){
  }
  throw Error("古い記録のバックアップ枠が上限です。元データをファイルに書き出してください。");
 }
+function listBackups(){
+ const select=$("backupSlot"),current=select.value;
+ try{
+  const keys=[];
+  for(let i=1;i<=100;i++){
+   const key=KEY+":backup"+(i===1?"":":"+i);
+   if(localStorage.getItem(key)===null)break;
+   keys.push(key);
+  }
+  select.replaceChildren();
+  keys.forEach((key,i)=>{const option=make("option","過去の記録 "+(i+1));option.value=key;select.append(option);});
+  select.value=keys.includes(current)?current:(keys.at(-1)||"");
+  $("exportBackup").disabled=keys.length===0;
+ }catch(error){select.replaceChildren();$("exportBackup").disabled=true;}
+}
+function exportBackup(){
+ try{
+  const key=$("backupSlot").value,raw=key?localStorage.getItem(key):null;
+  if(raw===null)throw Error("選択された記録がありません。");
+  try{
+   const value=G.validate(JSON.parse(raw));
+   download("night-audit-backup.json",JSON.stringify({schema:G.VERSION,state:value},null,2));
+  }catch(error){download("night-audit-backup-original.txt",raw);}
+ }catch(error){notice=error.message;render();}
+}
 function writeStateForced(next){
  try{localStorage.setItem(KEY,JSON.stringify(next));return true;}
  catch(error){notice="保存領域に書き込めませんでした。";return false;}
@@ -172,7 +197,7 @@ function historyView(){
 }
 function render(){
  const current=G.current(state);stats(current);caseView(current);priorNotebook(current);evidenceDesk(current);timeBudget(current);sources(current);decisions(current);resultView();historyView();
- $("warning").textContent=notice;const next=$("nextCase");next.hidden=next.hidden||state.complete;
+ $("warning").textContent=notice;listBackups();const next=$("nextCase");next.hidden=next.hidden||state.complete;
 }
 function download(name,raw){
  const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=make("a");
@@ -200,6 +225,7 @@ async function importSave(file){
 function init(){
  state=load();if(!recoveryBlocked)persist();render();
  $("export").addEventListener("click",exportSave);
+ $("exportBackup").addEventListener("click",exportBackup);
  $("import").addEventListener("click",()=>$("savefile").click());
  $("savefile").addEventListener("change",event=>{const file=event.target.files[0];event.target.value="";void importSave(file);});
  $("reset").addEventListener("click",()=>{
