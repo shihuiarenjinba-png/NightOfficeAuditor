@@ -13,6 +13,48 @@ function persist(){
  try{localStorage.setItem(KEY,JSON.stringify(state));return true;}
  catch(error){notice="端末への自動保存ができません。セーブを書き出してください。";return false;}
 }
+function writeState(next){
+ if(recoveryBlocked)return false;
+ try{localStorage.setItem(KEY,JSON.stringify(next));return true;}
+ catch(error){notice="保存できなかったため、調査・報告は確定しませんでした。保存先を確認してください。";return false;}
+}
+function preserveBackup(raw){
+ for(let i=1;i<=100;i++){
+  const key=KEY+":backup"+(i===1?"":":"+i),previous=localStorage.getItem(key);
+  if(previous===raw)return;
+  if(previous===null){localStorage.setItem(key,raw);return;}
+ }
+ throw Error("古い記録のバックアップ枠が上限です。元データをファイルに書き出してください。");
+}
+function listBackups(){
+ const select=$("backupSlot"),current=select.value;
+ try{
+  const keys=[];
+  for(let i=1;i<=100;i++){
+   const key=KEY+":backup"+(i===1?"":":"+i);
+   if(localStorage.getItem(key)===null)break;
+   keys.push(key);
+  }
+  select.replaceChildren();
+  keys.forEach((key,i)=>{const option=make("option","過去の記録 "+(i+1));option.value=key;select.append(option);});
+  select.value=keys.includes(current)?current:(keys.at(-1)||"");
+  $("exportBackup").disabled=keys.length===0;
+ }catch(error){select.replaceChildren();$("exportBackup").disabled=true;}
+}
+function exportBackup(){
+ try{
+  const key=$("backupSlot").value,raw=key?localStorage.getItem(key):null;
+  if(raw===null)throw Error("選択された記録がありません。");
+  try{
+   const value=G.validate(JSON.parse(raw));
+   download("night-audit-backup.json",JSON.stringify({schema:G.VERSION,state:value},null,2));
+  }catch(error){download("night-audit-backup-original.txt",raw);}
+ }catch(error){notice=error.message;render();}
+}
+function writeStateForced(next){
+ try{localStorage.setItem(KEY,JSON.stringify(next));return true;}
+ catch(error){notice="保存領域に書き込めませんでした。";return false;}
+}
 function stats(current){
  $("count").textContent=state.complete?"12 / 12":current.caseNumber+" / "+G.CASE_COUNT;
  $("score").textContent=state.score.toLocaleString("ja-JP");
@@ -88,7 +130,8 @@ function sources(current){
   b.disabled=!source.available||recoveryBlocked;
   b.append(make("strong",source.label),make("span",source.checked?"確認済み":source.available?"調査時間 "+source.cost+"分":"残り時間が足りません"));
   b.addEventListener("click",()=>{
-   try{const next=G.inspect(state,source.id);state=next.state;notice="";persist();render();}
+   try{const next=G.inspect(state,source.id);if(!writeState(next.state)){render();return;}
+    state=next.state;notice="";render();}
    catch(e){notice=e.message;render();}
   });root.append(b);
  }
@@ -114,9 +157,10 @@ function decisions(current){
    if(choice.id==="escalate"&&!state.active.checked.length&&
      !confirm("まだ証拠を確認していません。重大な不一致として報告しますか？"))return;
    try{
-    const result=G.decide(state,choice.id);state=result.state;lastReport=result.report;
+    const result=G.decide(state,choice.id);if(!writeState(result.state)){render();return;}
+    state=result.state;lastReport=result.report;
     notice=result.report.correct?"判断を記録しました。":"判断を記録しました。次の案件に学びを活かしましょう。";
-    persist();render();globalThis.OperationTabs?.open("report");$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
+    render();globalThis.OperationTabs?.open("report");$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
    }catch(e){notice=e.message;render();}
   });root.append(b);
  }
@@ -153,7 +197,7 @@ function historyView(){
 }
 function render(){
  const current=G.current(state);stats(current);caseView(current);priorNotebook(current);evidenceDesk(current);timeBudget(current);sources(current);decisions(current);resultView();historyView();
- $("warning").textContent=notice;const next=$("nextCase");next.hidden=next.hidden||state.complete;
+ $("warning").textContent=notice;listBackups();const next=$("nextCase");next.hidden=next.hidden||state.complete;
 }
 function download(name,raw){
  const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=make("a");
@@ -172,13 +216,16 @@ async function importSave(file){
   if(payload.schema!==G.VERSION)throw Error("対応していないセーブバージョンです。");
   const next=G.validate(payload.state);
   if(!confirm("現在の進行状況を読み込んだ記録で置き換えますか？"))return;
+  const raw=localStorage.getItem(KEY);if(raw!==null)preserveBackup(raw);
+  if(!writeStateForced(next))throw Error("読み込んだセーブを書き込めませんでした。");
   state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="セーブ記録を読み込みました。";
-  persist();render();
+  render();
  }catch(error){alert("セーブ読込に失敗しました："+error.message);}
 }
 function init(){
  state=load();if(!recoveryBlocked)persist();render();
  $("export").addEventListener("click",exportSave);
+ $("exportBackup").addEventListener("click",exportBackup);
  $("import").addEventListener("click",()=>$("savefile").click());
  $("savefile").addEventListener("change",event=>{const file=event.target.files[0];event.target.value="";void importSave(file);});
  $("reset").addEventListener("click",()=>{
@@ -186,7 +233,12 @@ function init(){
    "読み取れない元のセーブを上書きします。先にファイルに退避しましたか？":
    "今の12案件の進行を消して最初から始めます。セーブを書き出しましたか？";
   if(!confirm(msg))return;
-  state=G.initial();lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="新しい夜の監査を始めました。";persist();render();globalThis.OperationTabs?.open("case");
+  try{
+   const original=localStorage.getItem(KEY);if(original!==null)preserveBackup(original);
+   const next=G.initial();if(!writeStateForced(next))throw Error("保存できませんでした。");
+   state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;
+   notice="新しい夜の監査を始めました。";render();globalThis.OperationTabs?.open("case");
+  }catch(error){notice="元の記録を保持しています。"+error.message;render();}
  });
  $("nextCase").addEventListener("click",()=>{
   globalThis.OperationTabs?.open("case");

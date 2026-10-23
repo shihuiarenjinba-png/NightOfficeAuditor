@@ -41,7 +41,9 @@
 <div class="actions"><button id="export" type="button">セーブを書き出す</button>
 <button id="import" type="button">セーブを読み込む</button>
 <button id="reset" class="danger" type="button">はじめからやり直す</button>
-<input id="savefile" type="file" accept=".json,application/json" hidden></div>
+<input id="savefile" type="file" accept=".json,application/json" hidden>
+<label>保護された過去の記録を選択 <select id="backupSlot" aria-label="復元用バックアップを選択"></select></label>
+<button id="exportBackup" type="button">選んだバックアップを保存</button></div>
 <p class="muted">判断は端末内で自動保存します。元のセーブを読み込めない場合、確認せずに上書きしません。</p>
 </div></details>
 <footer>架空の証拠・架空の案件を用いた娯楽用ゲームです。実際の監査・法務・会計判断には利用できません。</footer>
