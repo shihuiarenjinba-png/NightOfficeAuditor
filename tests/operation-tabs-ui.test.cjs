@@ -36,5 +36,4 @@ test("tabs use intact game buttons, do not alter saved simulation and script exi
  assert.match(html,/src\/operation-tabs\.js/);
  assert.match(code,/\.hidden=!isActive/);
  assert.doesNotMatch(code,/localStorage|sessionStorage|\.cash\s*=|\.history\s*=|\.score\s*=/);
- assert.doesNotThrow(()=>new vm.Script(code));
-});
+ assert.match(code,/AudioContext\\|\\|window\\.webkitAudioContext/);\n assert.match(code,/createOscillator/);\n assert.match(code,/if\\(b&&open\\(b\\.dataset\\.operationTab\\)\\)tabSound\\(\\)/);\n assert.doesNotThrow(()=>new vm.Script(code));\n});
