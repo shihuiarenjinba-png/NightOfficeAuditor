@@ -2,6 +2,18 @@
 (() => {"use strict";
  const layout=[{"id":"case","label":"📖 案件","panels":[0]},{"id":"evidence","label":"🔎 証拠・資料","panels":[1]},{"id":"decision","label":"⚖️ 監査報告","panels":[2]},{"id":"report","label":"📝 結果","panels":[3]},{"id":"history","label":"📋 記録・セーブ","details":".extra"}];
  let selected=layout[0].id;
+ let audioContext=null;
+ function tabSound(){
+  try{
+   const AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return;
+   audioContext??=new AudioCtor();
+   if(audioContext.state==="suspended")void audioContext.resume();
+   const now=audioContext.currentTime,osc=audioContext.createOscillator(),gain=audioContext.createGain();
+   osc.type="triangle";osc.frequency.setValueAtTime(360,now);osc.frequency.exponentialRampToValueAtTime(520,now+.055);
+   gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.055,now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+.075);
+   osc.connect(gain);gain.connect(audioContext.destination);osc.start(now);osc.stop(now+.08);
+  }catch{/* Sound is optional; tab navigation must never fail because audio is unavailable. */}
+ }
  function boot(){
   const main=document.querySelector("main.shell");
   if(!main)return;
@@ -49,13 +61,13 @@
    }
    return true;
   }
-  nav.addEventListener("click",event=>{const b=event.target.closest("[data-operation-tab]");if(b)open(b.dataset.operationTab);});
+  nav.addEventListener("click",event=>{const b=event.target.closest("[data-operation-tab]");if(b&&open(b.dataset.operationTab))tabSound();});
   nav.addEventListener("keydown",event=>{
    if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;
    event.preventDefault();let index=layout.findIndex(x=>x.id===selected);
    if(event.key==="Home")index=0;else if(event.key==="End")index=layout.length-1;
    else index=(index+(event.key==="ArrowLeft"?-1:1)+layout.length)%layout.length;
-   open(layout[index].id,{focus:true});
+   if(open(layout[index].id,{focus:true}))tabSound();
   });
   
   // Current case is automatically revealed after the player presses Next Case.
