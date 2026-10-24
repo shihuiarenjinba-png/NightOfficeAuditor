@@ -28,6 +28,23 @@ jobs:
         run: npm install --no-audit --no-fund --no-package-lock
       - name: Capture 1024x768 and 1280x720 Windows Electron UI
         run: npx --no-install electron scripts/capture-ui-screenshots.cjs
+      - name: Verify all four screenshots and UI result
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @(
+            'night-office-1024x768-top.png',
+            'night-office-1024x768-decision.png',
+            'night-office-1280x720-top.png',
+            'night-office-1280x720-decision.png',
+            'UI_REVIEW_RESULT.json'
+          )
+          foreach ($file in $required) {
+            $path = Join-Path 'ui-review-screenshots' $file
+            if (-not (Test-Path -LiteralPath $path)) { throw "Missing UI review deliverable: $file" }
+            if ((Get-Item -LiteralPath $path).Length -lt 20) { throw "Empty UI review deliverable: $file" }
+          }
+          Write-Host 'UI_REVIEW_DELIVERABLES_PASS 4 screenshots + JSON'
       - name: Upload UI screenshots and result
         if: ${{ always() && hashFiles('ui-review-screenshots/**') != '' }}
         uses: actions/upload-artifact@v4
