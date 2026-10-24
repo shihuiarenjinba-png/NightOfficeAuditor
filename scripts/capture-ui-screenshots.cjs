@@ -6,6 +6,8 @@ const fs=require("node:fs"),path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const out=path.join(root,"ui-review-screenshots");
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+// Keep Electron alive between the two viewport captures on Windows.
+app.on("window-all-closed",()=>{});
 async function capture(width,height){
   const win=new BrowserWindow({width,height,useContentSize:true,show:true,
     backgroundColor:"#142027",autoHideMenuBar:true,
