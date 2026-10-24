@@ -103,7 +103,7 @@ h1 small{display:block;margin-top:9px;font-family:Georgia,serif;text-transform:u
 .decision{background:linear-gradient(145deg,#231b17f5,#101c20f5);border-color:#9a7149}
 .judgment-heading{display:flex;align-items:center;gap:13px;padding-bottom:12px;margin-bottom:15px;border-bottom:1px solid #886744}
 .judgment-icon{font-size:30px;color:#efc37a}.judgment-heading h2{font-family:"Yu Mincho",serif;font-size:21px;margin:0}.judgment-heading p{margin:2px 0 0;color:#c2aa86;font:10px Georgia,serif;letter-spacing:.08em}
-.visually-muted{margin:0 0 13px}.visually-muted>span{display:none}.visually-muted h2{font-size:13px;color:#e1c693}.visually-muted p{font-size:11px}
+.decision>.step{margin:0 0 13px}.decision>.step>span{display:none}.decision>.step h2{font-size:13px;color:#e1c693}.decision>.step p{font-size:11px}
 .choice{border-radius:3px;min-height:112px;color:#f8f4e8;padding:16px 16px 16px 48px;box-shadow:none;background:#203a36;border-color:#5aa596}
 .choice:before{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:22px;font-weight:900}
 .choice:nth-child(1){background:linear-gradient(100deg,#173d39,#21473f);border-color:#5ab5a2}.choice:nth-child(1):before{content:"✓";color:#7fd3bf}
