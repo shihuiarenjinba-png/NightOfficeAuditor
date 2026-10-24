@@ -1,0 +1,38 @@
+name: Night Office Auditor Windows UI screenshots
+on:
+  push:
+    branches:
+      - ops/msix-candidate-build-20261023
+    paths:
+      - 'scripts/capture-ui-screenshots.cjs'
+      - 'index.html'
+      - 'src/**'
+      - 'styles.css'
+      - 'context-scenes.css'
+      - '.github/workflows/ui-screenshots.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  electron-ui-review:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact UI source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Install exact project dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
+      - name: Capture 1024x768 and 1280x720 Windows Electron UI
+        run: npx --no-install electron scripts/capture-ui-screenshots.cjs
+      - name: Upload UI screenshots and result
+        if: ${{ always() && hashFiles('ui-review-screenshots/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: night-office-ui-review-${{ github.sha }}
+          path: ui-review-screenshots/
+          if-no-files-found: error
+          retention-days: 14
