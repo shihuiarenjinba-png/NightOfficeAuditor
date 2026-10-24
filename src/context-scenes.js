@@ -1,7 +1,7 @@
 /* Decorative scene headers only. All values remain owned by existing simulation controllers. */
 /* No external images, sounds, paid assets, network calls or save format changes. */
 (() => {"use strict";
-const CONFIG={"case":["今夜の案件ファイル","依頼文を読む画面。ここでは証拠の正誤を示しません。","audit-case"],"evidence":["調査デスク","既存の証拠ボタンと資料から調査します。未取得の証拠は表示しません。","audit-evidence"],"decision":["報告書作成","判断を選ぶ画面。答えや正誤のヒントは描画しません。","audit-decision"],"report":["調査結果の記録","報告済みの結果と信用の変化をゲーム本体が表示します。","audit-report"],"history":["監査記録","過去の決定とセーブデータを確認します。","paper-files"]};
+const CONFIG={"case":["今夜の案件ファイル","机に届いた依頼と違和感を読み、どこを疑うか決めます。","audit-case"],"evidence":["調査デスク","限られた時間で資料を選び、見落としと疑いすぎの両方を避けます。","audit-evidence"],"decision":["監査報告","集めた証拠をもとに、あなた自身の判断を報告します。","audit-decision"],"report":["判定記録","今回の判断が評価点と依頼主の信用にどう響いたか確認します。","audit-report"],"history":["監査記録","過去の判断とセーブ記録を整理し、次の案件へ備えます。","paper-files"]};
 const theme="audit";
 const $=id=>document.getElementById(id);
 function build(){
