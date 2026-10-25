@@ -1,0 +1,79 @@
+name: Unified buyer QA - Night Office Auditor
+on:
+  push:
+    branches:
+      - work/unified-qa-20261025
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-windows-ui-and-msix:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Install dependencies without modifying repository lockfiles
+        run: npm install --no-audit --no-fund --no-package-lock
+      - name: Verify all source and UI tests
+        run: npm test
+      - name: Capture actual Windows Electron UI in both required sizes
+        run: npx --no-install electron scripts/capture-ui-screenshots.cjs
+      - name: Validate Windows image sizes and report
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pairs = @(
+            @('night-office-1024x768-top.png',1024,768),
+            @('night-office-1024x768-decision.png',1024,768),
+            @('night-office-1280x720-top.png',1280,720),
+            @('night-office-1280x720-decision.png',1280,720)
+          )
+          foreach ($pair in $pairs) {
+            $file = Join-Path 'ui-review-screenshots' $pair[0]
+            if (!(Test-Path $file)) { throw "Missing screenshot $file" }
+            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $file))
+            if ($bytes.Length -lt 24) { throw "Empty PNG $file" }
+            $w = [System.Net.IPAddress]::NetworkToHostOrder([BitConverter]::ToInt32($bytes,16))
+            $h = [System.Net.IPAddress]::NetworkToHostOrder([BitConverter]::ToInt32($bytes,20))
+            if ($w -ne $pair[1] -or $h -ne $pair[2]) { throw "Wrong image dimensions $file $w x $h" }
+          }
+          if (!(Test-Path 'ui-review-screenshots/UI_REVIEW_RESULT.json')) { throw "Missing UI evidence metadata" }
+          Write-Host 'UNIFIED_WINDOWS_UI_PASS 1024x768 and 1280x720 case + decision'
+      - name: Upload actual Windows UI evidence
+        if: ${{ always() && hashFiles('ui-review-screenshots/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: night-office-unified-windows-ui-${{ github.sha }}
+          path: ui-review-screenshots/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Prepare review-only Store asset candidates
+        run: node scripts/make-store-candidate-icons.cjs
+      - name: Build strictly unsigned internal MSIX candidate
+        run: npm run build:msix
+        env:
+          STORE_BUILD_MODE: CANDIDATE
+          STORE_ID: 9P6SQX67J3R9
+          STORE_IDENTITY_NAME: OkinawaDesktopTools.NightOfficeAuditor
+          STORE_PUBLISHER: CN=46263F21-A700-41DB-8C9B-114C22FB82FC
+          STORE_PUBLISHER_DISPLAY_NAME: Okinawa Desktop Tools
+          STORE_DISPLAY_NAME: Night Office Auditor
+          SOURCE_GIT_COMMIT: ${{ github.sha }}
+          STORE_IDENTITY_CONFIRMED: OWNER_APPROVED
+          STORE_BRAND_APPROVED: CANDIDATE_ONLY
+          STORE_PACKAGE_VERSION_APPROVED: CANDIDATE_ONLY
+          STORE_PACKAGE_VERSION: 1.0.0.0
+      - name: Upload source-matched unsigned x64 candidate and SHA ledger
+        if: ${{ always() && hashFiles('dist-msix-store-candidate/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: night-office-unified-msix-QA_UNSIGNED-${{ github.sha }}
+          path: |
+            dist-msix-store-candidate/*.msix
+            dist-msix-store-candidate/*.msixupload
+            dist-msix-store-candidate/MSIX_CANDIDATE_HANDOFF.json
+          retention-days: 14
+          if-no-files-found: error
