@@ -16,7 +16,7 @@ class Node {
  scrollIntoView(){}
  remove(){}
 }
-function boot(raw,confirmValue=true){
+function boot(raw,confirmValue=true,denyWrites=false){
  const ids=["count","score","trust","time","case","sources","findings","choices",
   "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
@@ -38,7 +38,7 @@ function boot(raw,confirmValue=true){
  };
  const storage={
   getItem:k=>saved.get(k)??null,
-  setItem:(k,v)=>saved.set(k,v)
+  setItem:(k,v)=>{if(denyWrites)throw Error("storage is read-only");saved.set(k,v);}
  };
  const context={NightOfficeGame:G,document:doc,localStorage:storage,URL,Blob,
   alert:msg=>{throw Error("Unexpected alert: "+msg);},
@@ -143,4 +143,12 @@ test("second-half cases have individual context but earlier resolution never fix
  const later=G.current(c);
  assert.equal(later.title,first);assert.match(later.intro,/前半|引き継|交代|前回|新しい|変更|窓口|別の日/);
  assert.ok(later.priorEvidence);
+});
+test("failed storage writes cannot reset or erase a valid active case",()=>{
+ const progressed=G.decide(G.inspect(G.initial(49),"ledger").state,"review").state;
+ const original=JSON.stringify(progressed),ui=boot(original,true,true);
+ assert.equal(ui.saved.get("night-office-auditor:save:v1"),original);
+ ui.reset();
+ assert.equal(ui.saved.get("night-office-auditor:save:v1"),original);
+ assert.equal(ui.nodes.count.textContent,"2 / 12","failed reset must not move the UI to the first case");
 });
