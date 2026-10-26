@@ -172,8 +172,11 @@ async function importSave(file){
   if(payload.schema!==G.VERSION)throw Error("対応していないセーブバージョンです。");
   const next=G.validate(payload.state);
   if(!confirm("現在の進行状況を読み込んだ記録で置き換えますか？"))return;
+  // Keep the current state in memory and on disk if the replacement cannot
+  // be stored. A valid JSON file is not enough when storage has failed.
+  localStorage.setItem(KEY,JSON.stringify(next));
   state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="セーブ記録を読み込みました。";
-  persist();render();
+  render();
  }catch(error){alert("セーブ読込に失敗しました："+error.message);}
 }
 function init(){
@@ -186,7 +189,12 @@ function init(){
    "読み取れない元のセーブを上書きします。先にファイルに退避しましたか？":
    "今の12案件の進行を消して最初から始めます。セーブを書き出しましたか？";
   if(!confirm(msg))return;
-  state=G.initial();lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="新しい夜の監査を始めました。";persist();render();globalThis.OperationTabs?.open("case");
+  try{
+    const next=G.initial();
+    localStorage.setItem(KEY,JSON.stringify(next));
+    state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;
+    notice="新しい夜の監査を始めました。";render();globalThis.OperationTabs?.open("case");
+  }catch(error){notice="保存領域に書き込めないため、現在の監査記録は変更しませんでした。";render();}
  });
  $("nextCase").addEventListener("click",()=>{
   globalThis.OperationTabs?.open("case");
