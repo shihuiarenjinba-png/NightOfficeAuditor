@@ -18,7 +18,7 @@ class Node {
 }
 function boot(raw,confirmValue=true,denyWrites=false){
  const ids=["count","score","trust","time","case","sources","findings","choices",
-  "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","reset","savefile","casePanel","priorNotebook","priorEvidence"];
+  "evidenceBoard","caseTimerTitle","caseTimeProgress","caseTimeHint","warning","result","nextCase","history","export","import","restore","reset","savefile","casePanel","priorNotebook","priorEvidence"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
  nodes.nextCase.hidden=true;
  const saved=new Map();
@@ -38,7 +38,8 @@ function boot(raw,confirmValue=true,denyWrites=false){
  };
  const storage={
   getItem:k=>saved.get(k)??null,
-  setItem:(k,v)=>{if(denyWrites)throw Error("storage is read-only");saved.set(k,v);}
+  setItem:(k,v)=>{if(denyWrites)throw Error("storage is read-only");saved.set(k,v);},
+  removeItem:k=>saved.delete(k)
  };
  const context={NightOfficeGame:G,document:doc,localStorage:storage,URL,Blob,
   alert:msg=>{throw Error("Unexpected alert: "+msg);},
@@ -151,4 +152,23 @@ test("failed storage writes cannot reset or erase a valid active case",()=>{
  ui.reset();
  assert.equal(ui.saved.get("night-office-auditor:save:v1"),original);
  assert.equal(ui.nodes.count.textContent,"2 / 12","failed reset must not move the UI to the first case");
+});
+test("prior completed investigation can be recovered after an accidental new start",()=>{
+ const original=G.decide(G.inspect(G.initial(62),"ledger").state,"review").state;
+ const raw=JSON.stringify(original),ui=boot(raw);
+ ui.reset();
+ assert.equal(ui.getState().index,0);
+ assert.equal(ui.saved.get("night-office-auditor:previous-save:v1"),raw);
+ ui.nodes.restore.click();
+ assert.equal(ui.getState().index,1);
+ assert.equal(ui.saved.get("night-office-auditor:save:v1"),raw);
+});
+test("read-only storage cannot consume investigation time or advance an unsaved verdict",()=>{
+ const raw=JSON.stringify(G.initial(98)),ui=boot(raw,true,true);
+ ui.inspect(0);
+ assert.equal(ui.saved.get("night-office-auditor:save:v1"),raw);
+ assert.equal(ui.nodes.time.textContent,"10分");
+ ui.choose(1);
+ assert.equal(ui.saved.get("night-office-auditor:save:v1"),raw);
+ assert.equal(ui.nodes.count.textContent,"1 / 12");
 });
