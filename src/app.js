@@ -1,6 +1,6 @@
 /* NightOfficeAuditor — offline evidence game screen and safe local save. */
 (function(){"use strict";
-const G=globalThis.NightOfficeGame,$=id=>document.getElementById(id),KEY="night-office-auditor:save:v1";
+const G=globalThis.NightOfficeGame,$=id=>document.getElementById(id),KEY="night-office-auditor:save:v1",BACKUP_KEY="night-office-auditor:previous-save:v1";
 let state=null,lastReport=null,unreadableRaw=null,recoveryBlocked=false,notice="";
 const make=(tag,text,cls)=>{const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;};
 function load(){
@@ -12,6 +12,42 @@ function persist(){
  if(recoveryBlocked)return false;
  try{localStorage.setItem(KEY,JSON.stringify(state));return true;}
  catch(error){notice="端末への自動保存ができません。セーブを書き出してください。";return false;}
+}
+function replaceWithBackup(next){
+ const old=localStorage.getItem(KEY),prior=localStorage.getItem(BACKUP_KEY);
+ let backedUp=false;
+ try{
+  if(old!==null){localStorage.setItem(BACKUP_KEY,old);backedUp=true;}
+  localStorage.setItem(KEY,JSON.stringify(next));
+ }catch(error){
+  if(backedUp)try{
+   if(prior===null)localStorage.removeItem(BACKUP_KEY);
+   else localStorage.setItem(BACKUP_KEY,prior);
+  }catch(_rollbackError){}
+  throw error;
+ }
+}
+function restoreBackup(){
+ try{
+  const raw=localStorage.getItem(BACKUP_KEY);
+  if(raw===null)throw Error("復元できる前回の記録がありません。");
+  const next=G.validate(JSON.parse(raw));
+  if(!confirm("前回の監査記録を復元しますか？ 現在の進行と入れ替わります。"))return;
+  const current=localStorage.getItem(KEY);
+  localStorage.setItem(KEY,raw);
+  try{
+   if(current===null)localStorage.removeItem(BACKUP_KEY);
+   else localStorage.setItem(BACKUP_KEY,current);
+  }catch(error){
+   try{
+    if(current===null)localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY,current);
+   }catch(_restoreError){}
+   throw error;
+  }
+  state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;
+  notice="前回の監査記録を復元しました。";render();
+ }catch(error){alert("前回の記録を復元できませんでした："+error.message);}
 }
 function stats(current){
  $("count").textContent=state.complete?"12 / 12":current.caseNumber+" / "+G.CASE_COUNT;
@@ -174,7 +210,7 @@ async function importSave(file){
   if(!confirm("現在の進行状況を読み込んだ記録で置き換えますか？"))return;
   // Keep the current state in memory and on disk if the replacement cannot
   // be stored. A valid JSON file is not enough when storage has failed.
-  localStorage.setItem(KEY,JSON.stringify(next));
+  replaceWithBackup(next);
   state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;notice="セーブ記録を読み込みました。";
   render();
  }catch(error){alert("セーブ読込に失敗しました："+error.message);}
@@ -182,6 +218,7 @@ async function importSave(file){
 function init(){
  state=load();if(!recoveryBlocked)persist();render();
  $("export").addEventListener("click",exportSave);
+ $("restore").addEventListener("click",restoreBackup);
  $("import").addEventListener("click",()=>$("savefile").click());
  $("savefile").addEventListener("change",event=>{const file=event.target.files[0];event.target.value="";void importSave(file);});
  $("reset").addEventListener("click",()=>{
@@ -191,7 +228,7 @@ function init(){
   if(!confirm(msg))return;
   try{
     const next=G.initial();
-    localStorage.setItem(KEY,JSON.stringify(next));
+    replaceWithBackup(next);
     state=next;lastReport=null;unreadableRaw=null;recoveryBlocked=false;
     notice="新しい夜の監査を始めました。";render();globalThis.OperationTabs?.open("case");
   }catch(error){notice="保存領域に書き込めないため、現在の監査記録は変更しませんでした。";render();}
