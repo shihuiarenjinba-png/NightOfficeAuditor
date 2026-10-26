@@ -124,7 +124,11 @@ function sources(current){
   b.disabled=!source.available||recoveryBlocked;
   b.append(make("strong",source.label),make("span",source.checked?"確認済み":source.available?"調査時間 "+source.cost+"分":"残り時間が足りません"));
   b.addEventListener("click",()=>{
-   try{const next=G.inspect(state,source.id);state=next.state;notice="";persist();render();}
+   try{
+    const next=G.inspect(state,source.id);
+    localStorage.setItem(KEY,JSON.stringify(next.state));
+    state=next.state;notice="";render();
+   }
    catch(e){notice=e.message;render();}
   });root.append(b);
  }
@@ -150,9 +154,11 @@ function decisions(current){
    if(choice.id==="escalate"&&!state.active.checked.length&&
      !confirm("まだ証拠を確認していません。重大な不一致として報告しますか？"))return;
    try{
-    const result=G.decide(state,choice.id);state=result.state;lastReport=result.report;
+    const result=G.decide(state,choice.id);
+    localStorage.setItem(KEY,JSON.stringify(result.state));
+    state=result.state;lastReport=result.report;
     notice=result.report.correct?"判断を記録しました。":"判断を記録しました。次の案件に学びを活かしましょう。";
-    persist();render();globalThis.OperationTabs?.open("report");$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
+    render();globalThis.OperationTabs?.open("report");$("result").scrollIntoView({block:"nearest",behavior:"smooth"});
    }catch(e){notice=e.message;render();}
   });root.append(b);
  }
